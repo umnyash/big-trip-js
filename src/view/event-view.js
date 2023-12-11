@@ -62,25 +62,30 @@ function createEventTemplate(name, point, offers) {
 }
 
 export default class EventView {
+  #element = null;
+  #name = null;
+  #point = null;
+  #offers = null;
+
   constructor({ name, point, offers }) {
-    this.name = name;
-    this.point = point;
-    this.offers = offers;
+    this.#name = name;
+    this.#point = point;
+    this.#offers = offers;
   }
 
-  getTemplate() {
-    return createEventTemplate(this.name, this.point, this.offers);
+  get template() {
+    return createEventTemplate(this.#name, this.#point, this.#offers);
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
+  get element() {
+    if (!this.#element) {
+      this.#element = createElement(this.template);
     }
 
-    return this.element;
+    return this.#element;
   }
 
   removeElement() {
-    this.element = null;
+    this.#element = null;
   }
 }

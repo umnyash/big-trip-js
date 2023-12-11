@@ -27,56 +27,62 @@ function getDestinationName(destinations, id) {
 }
 
 export default class TripPresenter {
-  eventsListComponent = new EventsListView();
+  #eventsListComponent = new EventsListView();
+  #filterContainer = null;
+  #eventsContainer = null;
+  #pointsModel = null;
+  #tripPoints = [];
+  #offers = [];
+  #destinations = [];
 
   constructor({ filterContainer, eventsContainer, pointsModel }) {
-    this.filterContainer = filterContainer;
-    this.eventsContainer = eventsContainer;
-    this.pointsModel = pointsModel;
+    this.#filterContainer = filterContainer;
+    this.#eventsContainer = eventsContainer;
+    this.#pointsModel = pointsModel;
   }
 
   init() {
-    this.tripPoints = [...this.pointsModel.getPoints()];
-    this.offers = [...this.pointsModel.getOffers()];
-    this.destinations = [...this.pointsModel.getDestinations()];
+    this.#tripPoints = [...this.#pointsModel.points];
+    this.#offers = [...this.#pointsModel.offers];
+    this.#destinations = [...this.#pointsModel.destinations];
 
-    render(new FiltersView(), this.filterContainer);
-    render(new SortingView(), this.eventsContainer);
-    render(this.eventsListComponent, this.eventsContainer);
+    render(new FiltersView(), this.#filterContainer);
+    render(new SortingView(), this.#eventsContainer);
+    render(this.#eventsListComponent, this.#eventsContainer);
 
     render(
       new EventFormView({
-        point: this.tripPoints[0],
-        offers: this.offers,
-        destinations: this.destinations,
+        point: this.#tripPoints[0],
+        offers: this.#offers,
+        destinations: this.#destinations,
       }),
-      this.eventsListComponent.getElement()
+      this.#eventsListComponent.element,
     );
 
     render(
       new EventFormView({
         point: {},
-        offers: this.offers,
-        destinations: this.destinations,
+        offers: this.#offers,
+        destinations: this.#destinations,
       }),
-      this.eventsListComponent.getElement()
+      this.#eventsListComponent.element,
     );
 
-    for (let i = 0; i < this.tripPoints.length; i++) {
-      const type = this.tripPoints[i].type;
-      const offersIds = this.tripPoints[i].offers;
-      const offers = getSelectedOffers(this.offers, type, offersIds);
+    for (let i = 0; i < this.#tripPoints.length; i++) {
+      const type = this.#tripPoints[i].type;
+      const offersIds = this.#tripPoints[i].offers;
+      const offers = getSelectedOffers(this.#offers, type, offersIds);
 
-      const destinationId = this.tripPoints[i].destination;
-      const destinationName = getDestinationName(this.destinations, destinationId);
+      const destinationId = this.#tripPoints[i].destination;
+      const destinationName = getDestinationName(this.#destinations, destinationId);
 
       render(
         new EventView({
-          point: this.tripPoints[i],
+          point: this.#tripPoints[i],
           offers: offers,
           name: destinationName,
         }),
-        this.eventsListComponent.getElement()
+        this.#eventsListComponent.element,
       );
     }
   }
