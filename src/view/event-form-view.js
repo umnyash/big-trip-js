@@ -43,8 +43,12 @@ function createOffersTemplate(type, offers, selectedOffersIds) {
   `);
 }
 
+function getDestination(destinationId, destinations) {
+  return destinations.find((destinationData) => destinationData.id === destinationId);
+}
+
 function createDestinationTemplate(destinationId, destinations) {
-  const destination = destinations.find((destinationData) => destinationData.id === destinationId);
+  const destination = getDestination(destinationId, destinations);
 
   if (!destination.description && !destination.pictures.length) {
     return '';
@@ -63,6 +67,16 @@ function createDestinationTemplate(destinationId, destinations) {
         </div>
       </div>
     </section>
+  `);
+}
+
+function createDestinationsValuesList(destinations) {
+  return (`
+    <datalist id="destination-list-1">
+      ${destinations.map((destination) => `
+        <option value=${destination.name}></option>
+      `).join('')}
+    </datalist>
   `);
 }
 
@@ -89,10 +103,12 @@ function createEventFormTemplate(point = {}, offers, destinations) {
 
   const typeListTemplate = createTypeListTemplate(POINTS_TYPES, type);
   const offersTemplate = createOffersTemplate(type, offers, offersIds);
+  const destinationValuesList = createDestinationsValuesList(destinations);
+  const destinationName = (destinationId === '') ? '' : getDestination(destinationId, destinations).name;
   const destinationTemplate = (destinationId === '') ? '' : createDestinationTemplate(destinationId, destinations);
   const eventDetailsTemplate = createEventDetailsTemplate(offersTemplate, destinationTemplate);
 
-  return(`
+  return (`
     <li class="trip-events__item">
       <form class="event event--edit" action="#" method="post">
         <header class="event__header">
@@ -109,12 +125,8 @@ function createEventFormTemplate(point = {}, offers, destinations) {
             <label class="event__label  event__type-output" for="event-destination-1">
               ${convertFirstCharacterToUpperCase(type)}
             </label>
-            <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="Geneva" list="destination-list-1">
-            <datalist id="destination-list-1">
-              <option value="Amsterdam"></option>
-              <option value="Geneva"></option>
-              <option value="Chamonix"></option>
-            </datalist>
+            <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value=${destinationName} list="destination-list-1">
+            ${destinationValuesList}
           </div>
 
           <div class="event__field-group  event__field-group--time">
