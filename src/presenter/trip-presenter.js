@@ -3,6 +3,7 @@ import SortingView from '../view/sorting-view.js';
 import EventsListView from '../view/events-list-view.js';
 import EventFormView from '../view/event-form-view.js';
 import EventView from '../view/event-view.js';
+import NoEventsView from '../view/no-events-view.js';
 import { render } from '../render.js';
 import { isEscapeEvent } from '../utils.js';
 
@@ -48,18 +49,23 @@ export default class TripPresenter {
     this.#destinations = [...this.#pointsModel.destinations];
 
     render(new FiltersView(), this.#filterContainer);
-    render(new SortingView(), this.#eventsContainer);
-    render(this.#eventsListComponent, this.#eventsContainer);
 
-    for (let i = 0; i < this.#tripPoints.length; i++) {
-      const type = this.#tripPoints[i].type;
-      const offersIds = this.#tripPoints[i].offers;
-      const offers = getSelectedOffers(this.#offers, type, offersIds);
+    if (this.#tripPoints.length) {
+      render(new SortingView(), this.#eventsContainer);
+      render(this.#eventsListComponent, this.#eventsContainer);
 
-      const destinationId = this.#tripPoints[i].destination;
-      const destinationName = getDestinationName(this.#destinations, destinationId);
+      for (let i = 0; i < this.#tripPoints.length; i++) {
+        const type = this.#tripPoints[i].type;
+        const offersIds = this.#tripPoints[i].offers;
+        const offers = getSelectedOffers(this.#offers, type, offersIds);
 
-      this.#renderEvent(this.#tripPoints[i], offers, destinationName);
+        const destinationId = this.#tripPoints[i].destination;
+        const destinationName = getDestinationName(this.#destinations, destinationId);
+
+        this.#renderEvent(this.#tripPoints[i], offers, destinationName);
+      }
+    } else {
+      render(new NoEventsView(), this.#eventsContainer);
     }
   }
 
