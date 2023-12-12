@@ -1,5 +1,5 @@
 import FiltersView from '../view/filters-view.js';
-import SortingView from '../view/sorting.js';
+import SortingView from '../view/sorting-view.js';
 import EventsListView from '../view/events-list-view.js';
 import EventFormView from '../view/event-form-view.js';
 import EventView from '../view/event-view.js';
