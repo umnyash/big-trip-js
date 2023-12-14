@@ -1,6 +1,6 @@
 import { POINTS_TYPES } from '../const.js';
 import { convertFirstCharacterToUpperCase } from '../utils.js';
-import { createElement } from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 function createTypeListTemplate(types, selectedType) {
   return (`
@@ -154,31 +154,29 @@ function createEventFormTemplate(point = {}, offers, destinations) {
   `);
 }
 
-export default class EventFormView {
-  #element = null;
+export default class EventFormView extends AbstractView {
   #point = null;
   #offers = null;
   #destinations = null;
+  #handleFormSubmit = null;
 
-  constructor({ point, offers, destinations }) {
+  constructor({ point, offers, destinations, onFormSubmit }) {
+    super();
+
     this.#point = point;
     this.#offers = offers;
     this.#destinations = destinations;
+    this.#handleFormSubmit = onFormSubmit;
+
+    this.element.querySelector('form').addEventListener('submit', this.#formSubmitHandler);
   }
 
   get template() {
     return createEventFormTemplate(this.#point, this.#offers, this.#destinations);
   }
 
-  get element() {
-    if (!this.#element) {
-      this.#element = createElement(this.template);
-    }
-
-    return this.#element;
-  }
-
-  removeElement() {
-    this.#element = null;
-  }
+  #formSubmitHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleFormSubmit();
+  };
 }

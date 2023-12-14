@@ -4,7 +4,7 @@ import EventsListView from '../view/events-list-view.js';
 import EventFormView from '../view/event-form-view.js';
 import EventView from '../view/event-view.js';
 import NoEventsView from '../view/no-events-view.js';
-import { render } from '../render.js';
+import { render, replace } from '../framework/render.js';
 import { isEscapeEvent } from '../utils.js';
 
 function getSelectedOffers(offers, type, selectedOffersIds) {
@@ -70,46 +70,41 @@ export default class TripPresenter {
   }
 
   #renderEvent(point, offers, name) {
+    const onEscapeKeyDown = (evt) => {
+      if (isEscapeEvent(evt)) {
+        evt.preventDefault();
+        replaceFormToCard.call(this);
+        document.removeEventListener('keydown', onEscapeKeyDown);
+      }
+    };
+
     const EventComponent = new EventView({
       point,
       offers,
       name,
+      onEditButtonClick: () => {
+        replaceCardToForm.call(this);
+        document.addEventListener('keydown', onEscapeKeyDown);
+      },
     });
 
     const EventFormComponent = new EventFormView({
       point,
       offers: this.#offers,
       destinations: this.#destinations,
-    });
-
-    const replaceCardToForm = () => {
-      this.#eventsListComponent.element.replaceChild(EventFormComponent.element, EventComponent.element);
-    };
-
-    const replaceFormToCard = () => {
-      this.#eventsListComponent.element.replaceChild(EventComponent.element, EventFormComponent.element);
-    };
-
-    const onEscapeKeyDown = (evt) => {
-      if (isEscapeEvent(evt)) {
-        evt.preventDefault();
-        replaceFormToCard();
+      onFormSubmit: () => {
+        replaceFormToCard.call(this);
         document.removeEventListener('keydown', onEscapeKeyDown);
-      }
-    };
-
-    const editButtonElement = EventComponent.element.querySelector('.event__rollup-btn');
-    editButtonElement.addEventListener('click', () => {
-      replaceCardToForm();
-      document.addEventListener('keydown', onEscapeKeyDown);
+      },
     });
 
-    const saveButtonElement = EventFormComponent.element.querySelector('form');
-    saveButtonElement.addEventListener('submit', (evt) => {
-      evt.preventDefault();
-      replaceFormToCard();
-      document.removeEventListener('keydown', onEscapeKeyDown);
-    });
+    function replaceCardToForm() {
+      replace(EventFormComponent, EventComponent);
+    }
+
+    function replaceFormToCard() {
+      replace(EventComponent, EventFormComponent);
+    }
 
     render(EventComponent, this.#eventsListComponent.element);
   }
