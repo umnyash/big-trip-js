@@ -5,7 +5,7 @@ import EventFormView from '../view/event-form-view.js';
 import EventView from '../view/event-view.js';
 import NoEventsView from '../view/no-events-view.js';
 import { render, replace } from '../framework/render.js';
-import { isEscapeEvent } from '../utils.js';
+import { isEscapeEvent } from '../utils/common.js';
 
 function getSelectedOffers(offers, type, selectedOffersIds) {
   const offersByCurrentType = offers.find((offersByType) => offersByType.type === type).offers;

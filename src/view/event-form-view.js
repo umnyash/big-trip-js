@@ -1,5 +1,5 @@
 import { POINTS_TYPES } from '../const.js';
-import { convertFirstCharacterToUpperCase } from '../utils.js';
+import { convertFirstCharacterToUpperCase } from '../utils/event.js';
 import AbstractView from '../framework/view/abstract-view.js';
 
 function createTypeListTemplate(types, selectedType) {

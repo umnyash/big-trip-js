@@ -1,4 +1,4 @@
-import { MINUTES_IN_DAY, MINUTES_IN_HOUR, POINT_DURATION_MAIN_UNIT, PointDurationFormat, KeyCode } from './const.js';
+import { MINUTES_IN_DAY, MINUTES_IN_HOUR, POINT_DURATION_MAIN_UNIT, PointDurationFormat } from '../const.js';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 
@@ -25,5 +25,3 @@ export const getHumanizedDuration = (dateFrom, dateTo) => {
 };
 
 export const convertFirstCharacterToUpperCase = (string) => `${string[0].toUpperCase()}${string.slice(1)}`;
-
-export const isEscapeEvent = (evt) => evt.code === KeyCode.ESCAPE;

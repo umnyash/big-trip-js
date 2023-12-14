@@ -1,5 +1,5 @@
 import AbstractView from '../framework/view/abstract-view.js';
-import { humanizeDate, getHumanizedDuration } from '../utils.js';
+import { humanizeDate, getHumanizedDuration } from '../utils/event.js';
 import { POINT_DATE_FORMAT, POINT_TIME_FORMAT } from '../const.js';
 
 function createOffersListTemplate(offers) {
