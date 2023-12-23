@@ -1,5 +1,5 @@
 import AbstractView from '../framework/view/abstract-view.js';
-import { humanizeDate, getHumanizedDuration } from '../utils/event.js';
+import { humanizeDate, getHumanizedDuration } from '../utils/point.js';
 import { POINT_DATE_FORMAT, POINT_TIME_FORMAT } from '../const.js';
 
 function createOffersListTemplate(offers) {
@@ -16,7 +16,7 @@ function createOffersListTemplate(offers) {
   `);
 }
 
-function createEventTemplate(destinationName, point, offers) {
+function createPointCardTemplate(destinationName, point, offers) {
   const { basePrice, dateFrom, dateTo, type, isFavorite } = point;
 
   const humanizedDateFrom = humanizeDate(dateFrom, POINT_DATE_FORMAT);
@@ -61,7 +61,7 @@ function createEventTemplate(destinationName, point, offers) {
   `);
 }
 
-export default class EventView extends AbstractView {
+export default class PointCardView extends AbstractView {
   #destinationName = null;
   #point = null;
   #offers = null;
@@ -82,7 +82,7 @@ export default class EventView extends AbstractView {
   }
 
   get template() {
-    return createEventTemplate(this.#destinationName, this.#point, this.#offers);
+    return createPointCardTemplate(this.#destinationName, this.#point, this.#offers);
   }
 
   #favoriteButtonClickHandler = (evt) => {

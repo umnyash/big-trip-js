@@ -1,7 +1,7 @@
 import { render, replace, remove } from '../framework/render.js';
 import { isEscapeEvent } from '../utils/common.js';
-import EventFormView from '../view/event-form-view.js';
-import EventView from '../view/event-view.js';
+import PointFormView from '../view/point-form-view.js';
+import PointCardView from '../view/point-card-view.js';
 
 const Mode = {
   DEFAULT: 'DEFAULT',
@@ -29,13 +29,13 @@ function getDestinationName(destinations, id) {
   return destinationName;
 }
 
-export default class EventPresenter {
+export default class PointPresenter {
   #listElement = null;
   #handleDataChange = null;
   #handleModeChange = null;
 
-  #eventComponent = null;
-  #eventFormComponent = null;
+  #pointCardComponent = null;
+  #pointFormComponent = null;
 
   #point = null;
   #offers = [];
@@ -53,10 +53,10 @@ export default class EventPresenter {
     this.#offers = offers;
     this.#destinations = destinations;
 
-    const prevEventComponent = this.#eventComponent;
-    const prevEventFormComponent = this.#eventFormComponent;
+    const prevPointCardComponent = this.#pointCardComponent;
+    const prevPointFormComponent = this.#pointFormComponent;
 
-    this.#eventComponent = new EventView({
+    this.#pointCardComponent = new PointCardView({
       point: this.#point,
       offers: getSelectedOffers(this.#offers, this.#point.type, this.#point.offers),
       destinationName: getDestinationName(this.#destinations, this.#point.destination),
@@ -64,33 +64,33 @@ export default class EventPresenter {
       onEditButtonClick: this.#handleEditButtonClick,
     });
 
-    this.#eventFormComponent = new EventFormView({
+    this.#pointFormComponent = new PointFormView({
       point: this.#point,
       offers: this.#offers,
       destinations: this.#destinations,
       onFormSubmit: this.#handleFormSubmit,
     });
 
-    if (prevEventComponent === null || prevEventFormComponent === null) {
-      render(this.#eventComponent, this.#listElement);
+    if (prevPointCardComponent === null || prevPointFormComponent === null) {
+      render(this.#pointCardComponent, this.#listElement);
       return;
     }
 
     if (this.#mode === Mode.DEFAULT) {
-      replace(this.#eventComponent, prevEventComponent);
+      replace(this.#pointCardComponent, prevPointCardComponent);
     }
 
     if (this.#mode === Mode.EDITING) {
-      replace(this.#eventFormComponent, prevEventFormComponent);
+      replace(this.#pointFormComponent, prevPointFormComponent);
     }
 
-    remove(prevEventComponent);
-    remove(prevEventFormComponent);
+    remove(prevPointCardComponent);
+    remove(prevPointFormComponent);
   }
 
   destroy() {
-    remove(this.#eventComponent);
-    remove(this.#eventFormComponent);
+    remove(this.#pointCardComponent);
+    remove(this.#pointFormComponent);
   }
 
   resetView() {
@@ -100,14 +100,14 @@ export default class EventPresenter {
   }
 
   #replaceCardToForm() {
-    replace(this.#eventFormComponent, this.#eventComponent);
+    replace(this.#pointFormComponent, this.#pointCardComponent);
     document.addEventListener('keydown', this.#handleEscapeKeydown);
     this.#handleModeChange();
     this.#mode = Mode.EDITING;
   }
 
   #replaceFormToCard() {
-    replace(this.#eventComponent, this.#eventFormComponent);
+    replace(this.#pointCardComponent, this.#pointFormComponent);
     document.removeEventListener('keydown', this.#handleEscapeKeydown);
     this.#mode = Mode.DEFAULT;
   }

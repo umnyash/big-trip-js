@@ -1,5 +1,5 @@
 import { POINTS_TYPES } from '../const.js';
-import { convertFirstCharacterToUpperCase } from '../utils/event.js';
+import { convertFirstCharacterToUpperCase } from '../utils/point.js';
 import AbstractView from '../framework/view/abstract-view.js';
 
 function createTypeListTemplate(types, selectedType) {
@@ -80,7 +80,7 @@ function createDestinationsValuesList(destinations) {
   `);
 }
 
-function createEventDetailsTemplate(offersTemplate, destinationTemplate) {
+function createPointDetailsTemplate(offersTemplate, destinationTemplate) {
   if (!offersTemplate && !destinationTemplate) {
     return '';
   }
@@ -93,7 +93,7 @@ function createEventDetailsTemplate(offersTemplate, destinationTemplate) {
   );
 }
 
-function createEventFormTemplate(point = {}, offers, destinations) {
+function createPointFormTemplate(point = {}, offers, destinations) {
   const {
     basePrice = '',
     type = 'taxi',
@@ -106,7 +106,7 @@ function createEventFormTemplate(point = {}, offers, destinations) {
   const destinationValuesList = createDestinationsValuesList(destinations);
   const destinationName = (destinationId === '') ? '' : getDestination(destinationId, destinations).name;
   const destinationTemplate = (destinationId === '') ? '' : createDestinationTemplate(destinationId, destinations);
-  const eventDetailsTemplate = createEventDetailsTemplate(offersTemplate, destinationTemplate);
+  const pointDetailsTemplate = createPointDetailsTemplate(offersTemplate, destinationTemplate);
 
   return (`
     <li class="trip-events__item">
@@ -148,13 +148,13 @@ function createEventFormTemplate(point = {}, offers, destinations) {
           <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
           <button class="event__reset-btn" type="reset">Cancel</button>
         </header>
-        ${eventDetailsTemplate}
+        ${pointDetailsTemplate}
       </form>
     </li>
   `);
 }
 
-export default class EventFormView extends AbstractView {
+export default class PointFormView extends AbstractView {
   #point = null;
   #offers = null;
   #destinations = null;
@@ -172,7 +172,7 @@ export default class EventFormView extends AbstractView {
   }
 
   get template() {
-    return createEventFormTemplate(this.#point, this.#offers, this.#destinations);
+    return createPointFormTemplate(this.#point, this.#offers, this.#destinations);
   }
 
   #formSubmitHandler = (evt) => {

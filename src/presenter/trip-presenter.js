@@ -1,27 +1,27 @@
 import FiltersView from '../view/filters-view.js';
 import SortingView from '../view/sorting-view.js';
-import EventsListView from '../view/events-list-view.js';
-import NoEventsView from '../view/no-events-view.js';
+import PointsListView from '../view/points-list-view.js';
+import NoPointsView from '../view/no-points-view.js';
 import { render, RenderPosition } from '../framework/render.js';
-import EventPresenter from './event-presenter.js';
+import PointPresenter from './point-presenter.js';
 import { updateItem } from '../utils/common.js';
 
 export default class TripPresenter {
   #filtersComponent = new FiltersView();
-  #eventsListComponent = new EventsListView();
+  #pointsListComponent = new PointsListView();
   #sortingComponent = new SortingView();
-  #noEventsComponent = new NoEventsView();
+  #noPointsComponent = new NoPointsView();
   #filterContainer = null;
-  #eventsContainer = null;
+  #pointsContainer = null;
   #pointsModel = null;
   #tripPoints = [];
   #offers = [];
   #destinations = [];
-  #eventPresenter = new Map();
+  #pointPresenter = new Map();
 
-  constructor({ filterContainer, eventsContainer, pointsModel }) {
+  constructor({ filterContainer, pointsContainer, pointsModel }) {
     this.#filterContainer = filterContainer;
-    this.#eventsContainer = eventsContainer;
+    this.#pointsContainer = pointsContainer;
     this.#pointsModel = pointsModel;
   }
 
@@ -34,13 +34,13 @@ export default class TripPresenter {
     this.#renderTrip();
   }
 
-  #handleEventModeChange = () => {
-    this.#eventPresenter.forEach((presenter) => presenter.resetView());
+  #handlePointModeChange = () => {
+    this.#pointPresenter.forEach((presenter) => presenter.resetView());
   };
 
-  #handleEventChange = (updatedEvent) => {
-    this.#tripPoints = updateItem(this.#tripPoints, updatedEvent);
-    this.#eventPresenter.get(updatedEvent.id).init(updatedEvent, this.#offers, this.#destinations);
+  #handlePointChange = (updatedPoint) => {
+    this.#tripPoints = updateItem(this.#tripPoints, updatedPoint);
+    this.#pointPresenter.get(updatedPoint.id).init(updatedPoint, this.#offers, this.#destinations);
   };
 
   #renderFilters() {
@@ -48,44 +48,44 @@ export default class TripPresenter {
   }
 
   #renderSorting() {
-    render(this.#sortingComponent, this.#eventsContainer, RenderPosition.AFTERBEGIN);
+    render(this.#sortingComponent, this.#pointsContainer, RenderPosition.AFTERBEGIN);
   }
 
-  #renderEventsList() {
-    render(this.#eventsListComponent, this.#eventsContainer);
-    this.#renderEvents();
+  #renderPointsList() {
+    render(this.#pointsListComponent, this.#pointsContainer);
+    this.#renderPoints();
   }
 
-  #renderNoEvents() {
-    render(this.#noEventsComponent, this.#eventsContainer);
+  #renderNoPoints() {
+    render(this.#noPointsComponent, this.#pointsContainer);
   }
 
-  #renderEvent(point, offers, destinations) {
-    const eventPresenter = new EventPresenter({
-      listElement: this.#eventsListComponent.element,
-      onDataChange: this.#handleEventChange,
-      onModeChange: this.#handleEventModeChange,
+  #renderPoint(point, offers, destinations) {
+    const pointPresenter = new PointPresenter({
+      listElement: this.#pointsListComponent.element,
+      onDataChange: this.#handlePointChange,
+      onModeChange: this.#handlePointModeChange,
     });
 
-    eventPresenter.init(point, offers, destinations);
-    this.#eventPresenter.set(point.id, eventPresenter);
+    pointPresenter.init(point, offers, destinations);
+    this.#pointPresenter.set(point.id, pointPresenter);
   }
 
-  #renderEvents() {
-    this.#tripPoints.forEach((point) => this.#renderEvent(point, this.#offers, this.#destinations));
+  #renderPoints() {
+    this.#tripPoints.forEach((point) => this.#renderPoint(point, this.#offers, this.#destinations));
   }
 
-  #clearEvents() {
-    this.#eventPresenter.forEach((presenter) => presenter.destroy());
-    this.#eventPresenter.clear();
+  #clearPoints() {
+    this.#pointPresenter.forEach((presenter) => presenter.destroy());
+    this.#pointPresenter.clear();
   }
 
   #renderTrip() {
     if (this.#tripPoints.length) {
       this.#renderSorting();
-      this.#renderEventsList();
+      this.#renderPointsList();
     } else {
-      this.#renderNoEvents();
+      this.#renderNoPoints();
     }
   }
 }
