@@ -1,41 +1,23 @@
 import FiltersView from '../view/filters-view.js';
 import SortingView from '../view/sorting-view.js';
 import EventsListView from '../view/events-list-view.js';
-import EventFormView from '../view/event-form-view.js';
-import EventView from '../view/event-view.js';
 import NoEventsView from '../view/no-events-view.js';
-import { render, replace } from '../framework/render.js';
-import { isEscapeEvent } from '../utils/common.js';
-
-function getSelectedOffers(offers, type, selectedOffersIds) {
-  const offersByCurrentType = offers.find((offersByType) => offersByType.type === type).offers;
-
-  const selectedOffers = offersByCurrentType.filter((offer) => {
-    for (const offerId of selectedOffersIds) {
-      if (offer.id === offerId) {
-        return true;
-      }
-    }
-  });
-
-  return selectedOffers;
-}
-
-function getDestinationName(destinations, id) {
-  const destinationData = destinations.find((destination) => destination.id === id);
-  const destinationName = destinationData.name;
-
-  return destinationName;
-}
+import { render, RenderPosition } from '../framework/render.js';
+import EventPresenter from './event-presenter.js';
+import { updateItem } from '../utils/common.js';
 
 export default class TripPresenter {
+  #filtersComponent = new FiltersView();
   #eventsListComponent = new EventsListView();
+  #sortingComponent = new SortingView();
+  #noEventsComponent = new NoEventsView();
   #filterContainer = null;
   #eventsContainer = null;
   #pointsModel = null;
   #tripPoints = [];
   #offers = [];
   #destinations = [];
+  #eventPresenter = new Map();
 
   constructor({ filterContainer, eventsContainer, pointsModel }) {
     this.#filterContainer = filterContainer;
@@ -48,64 +30,62 @@ export default class TripPresenter {
     this.#offers = [...this.#pointsModel.offers];
     this.#destinations = [...this.#pointsModel.destinations];
 
-    render(new FiltersView(), this.#filterContainer);
-
-    if (this.#tripPoints.length) {
-      render(new SortingView(), this.#eventsContainer);
-      render(this.#eventsListComponent, this.#eventsContainer);
-
-      for (let i = 0; i < this.#tripPoints.length; i++) {
-        const type = this.#tripPoints[i].type;
-        const offersIds = this.#tripPoints[i].offers;
-        const offers = getSelectedOffers(this.#offers, type, offersIds);
-
-        const destinationId = this.#tripPoints[i].destination;
-        const destinationName = getDestinationName(this.#destinations, destinationId);
-
-        this.#renderEvent(this.#tripPoints[i], offers, destinationName);
-      }
-    } else {
-      render(new NoEventsView(), this.#eventsContainer);
-    }
+    this.#renderFilters();
+    this.#renderTrip();
   }
 
-  #renderEvent(point, offers, name) {
-    const onEscapeKeyDown = (evt) => {
-      if (isEscapeEvent(evt)) {
-        evt.preventDefault();
-        replaceFormToCard.call(this);
-        document.removeEventListener('keydown', onEscapeKeyDown);
-      }
-    };
+  #handleEventModeChange = () => {
+    this.#eventPresenter.forEach((presenter) => presenter.resetView());
+  };
 
-    const EventComponent = new EventView({
-      point,
-      offers,
-      name,
-      onEditButtonClick: () => {
-        replaceCardToForm.call(this);
-        document.addEventListener('keydown', onEscapeKeyDown);
-      },
+  #handleEventChange = (updatedEvent) => {
+    this.#tripPoints = updateItem(this.#tripPoints, updatedEvent);
+    this.#eventPresenter.get(updatedEvent.id).init(updatedEvent, this.#offers, this.#destinations);
+  };
+
+  #renderFilters() {
+    render(this.#filtersComponent, this.#filterContainer);
+  }
+
+  #renderSorting() {
+    render(this.#sortingComponent, this.#eventsContainer, RenderPosition.AFTERBEGIN);
+  }
+
+  #renderEventsList() {
+    render(this.#eventsListComponent, this.#eventsContainer);
+    this.#renderEvents();
+  }
+
+  #renderNoEvents() {
+    render(this.#noEventsComponent, this.#eventsContainer);
+  }
+
+  #renderEvent(point, offers, destinations) {
+    const eventPresenter = new EventPresenter({
+      listElement: this.#eventsListComponent.element,
+      onDataChange: this.#handleEventChange,
+      onModeChange: this.#handleEventModeChange,
     });
 
-    const EventFormComponent = new EventFormView({
-      point,
-      offers: this.#offers,
-      destinations: this.#destinations,
-      onFormSubmit: () => {
-        replaceFormToCard.call(this);
-        document.removeEventListener('keydown', onEscapeKeyDown);
-      },
-    });
+    eventPresenter.init(point, offers, destinations);
+    this.#eventPresenter.set(point.id, eventPresenter);
+  }
 
-    function replaceCardToForm() {
-      replace(EventFormComponent, EventComponent);
+  #renderEvents() {
+    this.#tripPoints.forEach((point) => this.#renderEvent(point, this.#offers, this.#destinations));
+  }
+
+  #clearEvents() {
+    this.#eventPresenter.forEach((presenter) => presenter.destroy());
+    this.#eventPresenter.clear();
+  }
+
+  #renderTrip() {
+    if (this.#tripPoints.length) {
+      this.#renderSorting();
+      this.#renderEventsList();
+    } else {
+      this.#renderNoEvents();
     }
-
-    function replaceFormToCard() {
-      replace(EventComponent, EventFormComponent);
-    }
-
-    render(EventComponent, this.#eventsListComponent.element);
   }
 }

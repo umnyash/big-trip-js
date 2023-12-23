@@ -16,7 +16,7 @@ function createOffersListTemplate(offers) {
   `);
 }
 
-function createEventTemplate(name, point, offers) {
+function createEventTemplate(destinationName, point, offers) {
   const { basePrice, dateFrom, dateTo, type, isFavorite } = point;
 
   const humanizedDateFrom = humanizeDate(dateFrom, POINT_DATE_FORMAT);
@@ -33,7 +33,7 @@ function createEventTemplate(name, point, offers) {
         <div class="event__type">
           <img class="event__type-icon" width="42" height="42" src="img/icons/${type}.png" alt="Event type icon">
         </div>
-        <h3 class="event__title">${type} ${name}</h3>
+        <h3 class="event__title">${type} ${destinationName}</h3>
         <div class="event__schedule">
           <p class="event__time">
             <time class="event__start-time" datetime=${dateFrom}>${humanizedTimeFrom}</time>
@@ -62,27 +62,35 @@ function createEventTemplate(name, point, offers) {
 }
 
 export default class EventView extends AbstractView {
-  #name = null;
+  #destinationName = null;
   #point = null;
   #offers = null;
+  #handleFavoriteButtonClick = null;
   #handleEditButtonClick = null;
 
-  constructor({ name, point, offers, onEditButtonClick }) {
+  constructor({ destinationName, point, offers, onFavoriteButtonClick, onEditButtonClick }) {
     super();
 
-    this.#name = name;
+    this.#destinationName = destinationName;
     this.#point = point;
     this.#offers = offers;
+    this.#handleFavoriteButtonClick = onFavoriteButtonClick;
     this.#handleEditButtonClick = onEditButtonClick;
 
-    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#editButtonClickHundler);
+    this.element.querySelector('.event__favorite-btn').addEventListener('click', this.#favoriteButtonClickHandler);
+    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#editButtonClickHandler);
   }
 
   get template() {
-    return createEventTemplate(this.#name, this.#point, this.#offers);
+    return createEventTemplate(this.#destinationName, this.#point, this.#offers);
   }
 
-  #editButtonClickHundler = (evt) => {
+  #favoriteButtonClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleFavoriteButtonClick();
+  };
+
+  #editButtonClickHandler = (evt) => {
     evt.preventDefault();
     this.#handleEditButtonClick();
   };
