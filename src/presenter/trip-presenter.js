@@ -5,19 +5,23 @@ import NoPointsView from '../view/no-points-view.js';
 import { render, RenderPosition } from '../framework/render.js';
 import PointPresenter from './point-presenter.js';
 import { updateItem } from '../utils/common.js';
+import { sortPointsByDateUp, sortPointsByPriceDown, sortPointsByDurationDown } from '../utils/point.js';
+import { SortType } from '../const.js';
 
 export default class TripPresenter {
   #filtersComponent = new FiltersView();
   #pointsListComponent = new PointsListView();
-  #sortingComponent = new SortingView();
+  #sortingComponent = null;
   #noPointsComponent = new NoPointsView();
   #filterContainer = null;
   #pointsContainer = null;
   #pointsModel = null;
+
   #tripPoints = [];
   #offers = [];
   #destinations = [];
   #pointPresenter = new Map();
+  #currentSortType = SortType.DATA_UP;
 
   constructor({ filterContainer, pointsContainer, pointsModel }) {
     this.#filterContainer = filterContainer;
@@ -43,11 +47,40 @@ export default class TripPresenter {
     this.#pointPresenter.get(updatedPoint.id).init(updatedPoint, this.#offers, this.#destinations);
   };
 
+  #sortPoints(sortType) {
+    switch (sortType) {
+      case SortType.DURATION_DOWN:
+        this.#tripPoints.sort(sortPointsByDurationDown);
+        break;
+      case SortType.PRICE_DOWN:
+        this.#tripPoints.sort(sortPointsByPriceDown);
+        break;
+      default:
+        this.#tripPoints.sort(sortPointsByDateUp);
+    }
+
+    this.#currentSortType = sortType;
+  }
+
+  #handleSortTypeChange = (sortType) => {
+    if (this.#currentSortType === sortType) {
+      return;
+    }
+
+    this.#sortPoints(sortType);
+    this.#clearPoints();
+    this.#renderPoints();
+  };
+
   #renderFilters() {
     render(this.#filtersComponent, this.#filterContainer);
   }
 
   #renderSorting() {
+    this.#sortingComponent = new SortingView({
+      onSortTypeChange: this.#handleSortTypeChange,
+    });
+
     render(this.#sortingComponent, this.#pointsContainer, RenderPosition.AFTERBEGIN);
   }
 
@@ -83,6 +116,7 @@ export default class TripPresenter {
   #renderTrip() {
     if (this.#tripPoints.length) {
       this.#renderSorting();
+      this.#sortPoints(this.#currentSortType);
       this.#renderPointsList();
     } else {
       this.#renderNoPoints();

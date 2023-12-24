@@ -27,3 +27,9 @@ export const PointDurationFormat = {
 export const KeyCode = Object.freeze({
   ESCAPE: 'Escape',
 });
+
+export const SortType = {
+  DATA_UP: 'data-up',
+  PRICE_DOWN: 'price-down',
+  DURATION_DOWN: 'time-down',
+};

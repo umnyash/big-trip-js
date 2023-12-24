@@ -25,3 +25,18 @@ export const getHumanizedDuration = (dateFrom, dateTo) => {
 };
 
 export const convertFirstCharacterToUpperCase = (string) => `${string[0].toUpperCase()}${string.slice(1)}`;
+
+export function sortPointsByDateUp(pointA, pointB) {
+  return dayjs(pointA.dateFrom).diff(dayjs(pointB.dateFrom));
+}
+
+export function sortPointsByPriceDown(pointA, pointB) {
+  return pointB.basePrice - pointA.basePrice;
+}
+
+export function sortPointsByDurationDown(pointA, pointB) {
+  const pointADuration = dayjs(pointA.dateTo).diff(pointA.dateFrom);
+  const pointBDuration = dayjs(pointB.dateTo).diff(pointB.dateFrom);
+
+  return pointBDuration - pointADuration;
+}
