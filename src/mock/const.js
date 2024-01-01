@@ -83,6 +83,6 @@ export const PointDuration = {
   },
   LONG: {
     MIN: 1 * MINUTES_IN_DAY,
-    MAX: 30 * MINUTES_IN_DAY,
+    MAX: 60 * MINUTES_IN_DAY,
   },
 };

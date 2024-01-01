@@ -1,4 +1,4 @@
-import { MINUTES_IN_DAY, MINUTES_IN_HOUR, POINT_DURATION_MAIN_UNIT, PointDurationFormat } from '../const.js';
+import { MINUTES_IN_DAY, MINUTES_IN_HOUR, PointDurationTimeFormat, PointDurationUnit } from '../const.js';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 
@@ -10,18 +10,25 @@ export const getHumanizedDuration = (dateFrom, dateTo) => {
   const from = dayjs(dateFrom);
   const to = dayjs(dateTo);
 
-  const durationInMinutes = to.diff(from, POINT_DURATION_MAIN_UNIT);
-  let durationFormat = PointDurationFormat.DAYS_HOURS_MINUTES;
+  const durationInDays = to.diff(from, PointDurationUnit.DAY);
+  let daysDuration = '';
 
-  if (durationInMinutes < MINUTES_IN_DAY) {
-    durationFormat = PointDurationFormat.HOURS_MINUTES;
+  const durationInMinutes = to.diff(from, PointDurationUnit.MINUTE);
+  const remainingMinutesCount = durationInMinutes % MINUTES_IN_DAY;
+
+  let timeDurationFormat = PointDurationTimeFormat.HOURS_MINUTES;
+
+  if (durationInDays) {
+    daysDuration = `${(durationInDays < 10) ? '0' : ''}${durationInDays}D`; // (1)
+  } else {
+    timeDurationFormat = (remainingMinutesCount < MINUTES_IN_HOUR)
+      ? PointDurationTimeFormat.MINUTES
+      : PointDurationTimeFormat.HOURS_MINUTES;
   }
 
-  if (durationInMinutes < MINUTES_IN_HOUR) {
-    durationFormat = PointDurationFormat.MINUTES;
-  }
+  const timeDuration = dayjs.duration(remainingMinutesCount, PointDurationUnit.MINUTE).format(timeDurationFormat);
 
-  return dayjs.duration(durationInMinutes, POINT_DURATION_MAIN_UNIT).format(durationFormat);
+  return `${daysDuration} ${timeDuration}`.trim(); // (1)
 };
 
 export const convertFirstCharacterToUpperCase = (string) => `${string[0].toUpperCase()}${string.slice(1)}`;
@@ -40,3 +47,13 @@ export function sortPointsByDurationDown(pointA, pointB) {
 
   return pointBDuration - pointADuration;
 }
+
+/* (1)
+ * Почему продолжительность составляется из двух строк (количество дней + количество часов и минут),
+ * почему просто не используется dayjs.duration( to.diff(from) ).format('дни-часы-минуты')?
+ * Во-первых, метод duration() не может правильно посчитать количество месяцев, дней, часов,
+ * когда длительность больше месяца, так как количество дней в месяцах бывает разным,
+ * а в расчётах месяц приравнивается 30 дням и 10 часам (https://github.com/iamkun/dayjs/issues/1433).
+ * Во-вторых, метод format() может выводить количество дней только в диапазоне от 0 до 31,
+ * что делает невозможным отобразить продолжительность более 31 дня.
+ */
