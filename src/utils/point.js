@@ -1,8 +1,19 @@
-import { MINUTES_IN_DAY, MINUTES_IN_HOUR, PointDurationTimeFormat, PointDurationUnit } from '../const.js';
+import {
+  MINUTES_IN_DAY,
+  MINUTES_IN_HOUR,
+  DATE_COMPARISON_PRECISION_UNIT,
+  PointDurationTimeFormat,
+  PointDurationUnit
+} from '../const.js';
+
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 dayjs.extend(duration);
+dayjs.extend(isSameOrBefore);
+dayjs.extend(isSameOrAfter);
 
 export const humanizeDate = (date, format) => dayjs(date).format(format);
 
@@ -46,6 +57,23 @@ export function sortPointsByDurationDown(pointA, pointB) {
   const pointBDuration = dayjs(pointB.dateTo).diff(pointB.dateFrom);
 
   return pointBDuration - pointADuration;
+}
+
+export function isDatesEqual(dateA, dateB) {
+  return dayjs(dateA).isSame(dateB, DATE_COMPARISON_PRECISION_UNIT);
+}
+
+export function isPastPoint(point) {
+  return dayjs(point.dateTo).isBefore(dayjs(), DATE_COMPARISON_PRECISION_UNIT);
+}
+
+export function isPresentPoint(point) {
+  return dayjs(point.dateFrom).isSameOrBefore(dayjs(), DATE_COMPARISON_PRECISION_UNIT) &&
+    dayjs(point.dateTo).isSameOrAfter(dayjs(), DATE_COMPARISON_PRECISION_UNIT);
+}
+
+export function isFuturePoint(point) {
+  return dayjs(point.dateFrom).isAfter(dayjs(), DATE_COMPARISON_PRECISION_UNIT);
 }
 
 /* (1)

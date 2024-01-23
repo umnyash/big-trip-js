@@ -4,6 +4,8 @@ export const POINT_TIME_FORMAT = 'HH:mm';
 export const MINUTES_IN_HOUR = 60;
 export const MINUTES_IN_DAY = 1440;
 
+export const DATE_COMPARISON_PRECISION_UNIT = 'm';
+
 export const POINTS_TYPES = [
   'taxi',
   'bus',
@@ -31,8 +33,27 @@ export const KeyCode = Object.freeze({
   ESCAPE: 'Escape',
 });
 
+export const FilterType = {
+  EVERYTHING: 'everything',
+  FUTURE: 'future',
+  PAST: 'past',
+  PRESENT: 'present',
+};
+
 export const SortType = {
   DATA_UP: 'data-up',
   PRICE_DOWN: 'price-down',
   DURATION_DOWN: 'time-down',
+};
+
+export const UserAction = {
+  ADD_POINT: 'ADD_POINT',
+  DELETE_POINT: 'DELETE_POINT',
+  UPDATE_POINT: 'UPDATE_POINT',
+};
+
+export const UpdateType = {
+  PATCH: 'PATCH',
+  MINOR: 'MINOR',
+  MAJOR: 'MAJOR',
 };

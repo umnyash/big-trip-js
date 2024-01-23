@@ -3,11 +3,12 @@ import { convertFirstCharacterToUpperCase } from '../utils/point.js';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
+import dayjs from 'dayjs';
 
 const BLANK_POINT = {
   basePrice: '',
-  dateFrom: '',
-  dateTo: '',
+  dateFrom: dayjs().toDate(),
+  dateTo: dayjs().toDate(),
   type: 'taxi',
   offers: [],
   destination: null,
@@ -111,7 +112,24 @@ function createPointDetailsTemplate(offersTemplate, destinationTemplate) {
   );
 }
 
-function createPointFormTemplate(data, offers, destinations) {
+function createPointButtonsTemplate(isNewPoint) {
+  if (isNewPoint) {
+    return(`
+      <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
+      <button class="event__reset-btn" type="reset">Cancel</button>
+    `);
+  } else {
+    return(`
+      <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
+      <button class="event__reset-btn" type="button">Delete</button>
+      <button class="event__rollup-btn" type="reset">
+        <span class="visually-hidden">Open event</span>
+      </button>
+    `);
+  }
+}
+
+function createPointFormTemplate(data, isNew, offers, destinations) {
   const {
     basePrice,
     type,
@@ -125,6 +143,7 @@ function createPointFormTemplate(data, offers, destinations) {
   const destinationName = (destinationId === null) ? '' : getDestination(destinationId, destinations).name;
   const destinationTemplate = (destinationId === null) ? '' : createDestinationTemplate(destinationId, destinations);
   const pointDetailsTemplate = createPointDetailsTemplate(offersTemplate, destinationTemplate);
+  const pointButtonsTemplate = createPointButtonsTemplate(isNew);
 
   return (`
     <li class="trip-events__item">
@@ -143,7 +162,7 @@ function createPointFormTemplate(data, offers, destinations) {
             <label class="event__label  event__type-output" for="event-destination-1">
               ${convertFirstCharacterToUpperCase(type)}
             </label>
-            <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value=${destinationName} list="destination-list-1">
+            <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${destinationName}" list="destination-list-1">
             ${destinationValuesList}
           </div>
 
@@ -162,9 +181,7 @@ function createPointFormTemplate(data, offers, destinations) {
             </label>
             <input class="event__input  event__input--price" id="event-price-1" type="text" name="event-price" value=${basePrice}>
           </div>
-
-          <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
-          <button class="event__reset-btn" type="reset">Cancel</button>
+          ${pointButtonsTemplate}
         </header>
         ${pointDetailsTemplate}
       </form>
@@ -177,10 +194,12 @@ export default class PointFormView extends AbstractStatefulView {
   #destinations = null;
   #handleFormReset = null;
   #handleFormSubmit = null;
+  #handleDeleteButtonClick = null;
   #datepickerFrom = null;
   #datepickerTo = null;
+  #isNewPoint = false;
 
-  constructor({ point = BLANK_POINT, offers, destinations, onFormReset, onFormSubmit }) {
+  constructor({ point = BLANK_POINT, isNewPoint, offers, destinations, onFormReset, onFormSubmit, onDeleteButtonClick }) {
     super();
 
     this._setState(PointFormView.parsePointToState(point));
@@ -188,6 +207,8 @@ export default class PointFormView extends AbstractStatefulView {
     this.#destinations = destinations;
     this.#handleFormReset = onFormReset;
     this.#handleFormSubmit = onFormSubmit;
+    this.#handleDeleteButtonClick = onDeleteButtonClick;
+    this.#isNewPoint = isNewPoint;
 
     this._restoreHandlers();
   }
@@ -207,7 +228,7 @@ export default class PointFormView extends AbstractStatefulView {
   }
 
   get template() {
-    return createPointFormTemplate(this._state, this.#offers, this.#destinations);
+    return createPointFormTemplate(this._state, this.#isNewPoint, this.#offers, this.#destinations);
   }
 
   reset(point) {
@@ -217,6 +238,7 @@ export default class PointFormView extends AbstractStatefulView {
   _restoreHandlers = () => {
     this.element.querySelector('form').addEventListener('reset', this.#formResetHandler);
     this.element.querySelector('form').addEventListener('submit', this.#formSubmitHandler);
+    this.element.querySelector('.event__reset-btn[type="button"]')?.addEventListener('click', this.#deleteButtonClickHandler);
     this.element.querySelector('.event__type-group').addEventListener('change', this.#eventTypeChangeHandler);
     this.element.querySelector('.event__available-offers')?.addEventListener('change', this.#eventOffersChangeHandler);
     this.element.querySelector('.event__input--destination').addEventListener('input', this.#eventDestinationInputHandler);
@@ -232,6 +254,11 @@ export default class PointFormView extends AbstractStatefulView {
   #formSubmitHandler = (evt) => {
     evt.preventDefault();
     this.#handleFormSubmit(PointFormView.parseStateToPoint(this._state));
+  };
+
+  #deleteButtonClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleDeleteButtonClick(PointFormView.parseStateToPoint(this._state));
   };
 
   #eventTypeChangeHandler = (evt) => {

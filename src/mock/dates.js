@@ -1,10 +1,12 @@
-import { POINT_DURATION_UNIT, PointDuration } from './const';
+import { POINT_DURATION_UNIT, DAY_UNIT, PASSED_DAYS_MAX_COUNT, PointDuration } from './const';
 import { getRandomInteger, getRandomArrayItem } from './utils.js';
 import dayjs from 'dayjs';
 
 export default function generateDates(pointsCount) {
   let dateFrom = null;
-  let dateTo = dayjs();
+
+  const daysAgo = getRandomInteger(0, PASSED_DAYS_MAX_COUNT);
+  let dateTo = dayjs().subtract(daysAgo, DAY_UNIT);
 
   const dates = Array.from({ length: pointsCount }, () => {
     const durationTypes = Object.keys(PointDuration);

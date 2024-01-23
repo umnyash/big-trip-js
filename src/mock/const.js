@@ -1,8 +1,10 @@
 const MINUTES_IN_DAY = 1440;
 
-export const POINTS_COUNT = 20;
+export const POINTS_COUNT = 2;
 
 export const POINT_DURATION_UNIT = 'minute';
+export const DAY_UNIT = 'day';
+export const PASSED_DAYS_MAX_COUNT = 30;
 
 export const DESTINATION_NAMES = [
   'Geneva',
