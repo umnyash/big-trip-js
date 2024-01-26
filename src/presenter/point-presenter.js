@@ -1,6 +1,6 @@
 import { render, replace, remove } from '../framework/render.js';
 import { isEscapeEvent } from '../utils/common.js';
-import { isDatesEqual } from '../utils/point.js';
+import { isDatesEqual, getDestinationName, getSelectedOffers, isOffersSame } from '../utils/point.js';
 import PointFormView from '../view/point-form-view.js';
 import PointCardView from '../view/point-card-view.js';
 import { UserAction, UpdateType } from '../const.js';
@@ -9,27 +9,6 @@ const Mode = {
   DEFAULT: 'DEFAULT',
   EDITING: 'EDITING',
 };
-
-function getSelectedOffers(offers, type, selectedOffersIds) {
-  const offersByCurrentType = offers.find((offersByType) => offersByType.type === type).offers;
-
-  const selectedOffers = offersByCurrentType.filter((offer) => {
-    for (const offerId of selectedOffersIds) {
-      if (offer.id === offerId) {
-        return true;
-      }
-    }
-  });
-
-  return selectedOffers;
-}
-
-function getDestinationName(destinations, id) {
-  const destinationData = destinations.find((destination) => destination.id === id);
-  const destinationName = destinationData.name;
-
-  return destinationName;
-}
 
 export default class PointPresenter {
   #listElement = null;
@@ -154,7 +133,8 @@ export default class PointPresenter {
     const isMinorUpdate =
       !isDatesEqual(this.#point.dateFrom, point.dateFrom) ||
       !isDatesEqual(this.#point.dateTo, point.dateTo) ||
-      this.#point.basePrice !== point.basePrice;
+      this.#point.basePrice !== point.basePrice ||
+      !isOffersSame(this.#point.offers, point.offers);
 
     this.#handleDataChange(
       UserAction.UPDATE_POINT,

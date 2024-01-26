@@ -1,14 +1,14 @@
 import { POINTS_TYPES } from '../const.js';
-import { convertFirstCharacterToUpperCase } from '../utils/point.js';
+import { convertFirstCharacterToUpperCase, getDateNow } from '../utils/point.js';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
-import dayjs from 'dayjs';
+import he from 'he';
 
 const BLANK_POINT = {
   basePrice: '',
-  dateFrom: dayjs().toDate(),
-  dateTo: dayjs().toDate(),
+  dateFrom: getDateNow(),
+  dateTo: getDateNow(),
   type: 'taxi',
   offers: [],
   destination: null,
@@ -162,7 +162,7 @@ function createPointFormTemplate(data, isNew, offers, destinations) {
             <label class="event__label  event__type-output" for="event-destination-1">
               ${convertFirstCharacterToUpperCase(type)}
             </label>
-            <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${destinationName}" list="destination-list-1">
+            <input class="event__input  event__input--destination" id="event-destination-1" type="text" required name="event-destination" value="${he.encode(destinationName)}" list="destination-list-1">
             ${destinationValuesList}
           </div>
 
@@ -179,7 +179,7 @@ function createPointFormTemplate(data, isNew, offers, destinations) {
               <span class="visually-hidden">Price</span>
               &euro;
             </label>
-            <input class="event__input  event__input--price" id="event-price-1" type="text" name="event-price" value=${basePrice}>
+            <input class="event__input  event__input--price" id="event-price-1" type="number" min="0" name="event-price" required value=${basePrice}>
           </div>
           ${pointButtonsTemplate}
         </header>
@@ -285,8 +285,11 @@ export default class PointFormView extends AbstractStatefulView {
     const currentDestination = this.#destinations.find((destination) => destination.name === evt.target.value);
 
     if (!currentDestination) {
+      evt.target.setCustomValidity('This destination is not supported.');
       return;
     }
+
+    evt.target.setCustomValidity('');
 
     this.updateElement({
       destination: currentDestination.id,
@@ -296,7 +299,7 @@ export default class PointFormView extends AbstractStatefulView {
   #basePriceInputHandler = (evt) => {
     evt.preventDefault();
     this._setState({
-      basePrice: evt.target.value,
+      basePrice: +evt.target.value,
     });
   };
 

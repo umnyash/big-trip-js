@@ -76,6 +76,45 @@ export function isFuturePoint(point) {
   return dayjs(point.dateFrom).isAfter(dayjs(), DATE_COMPARISON_PRECISION_UNIT);
 }
 
+export function getDateNow() {
+  return dayjs().toDate();
+}
+
+export function getDestinationName(destinations, id) {
+  const destinationData = destinations.find((destination) => destination.id === id);
+  const destinationName = destinationData.name;
+
+  return destinationName;
+}
+
+export function getSelectedOffers(offers, type, selectedOffersIds) {
+  const offersByCurrentType = offers.find((offersByType) => offersByType.type === type).offers;
+
+  const selectedOffers = offersByCurrentType.filter((offer) => {
+    for (const offerId of selectedOffersIds) {
+      if (offer.id === offerId) {
+        return true;
+      }
+    }
+  });
+
+  return selectedOffers;
+}
+
+export function isOffersSame(offersA, offersB) {
+  if (offersA.length !== offersB.length) {
+    return false;
+  }
+
+  for (const offer of offersA) {
+    if (!offersB.includes(offer)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 /* (1)
  * Почему продолжительность составляется из двух строк (количество дней + количество часов и минут),
  * почему просто не используется dayjs.duration( to.diff(from) ).format('дни-часы-минуты')?

@@ -15,6 +15,7 @@ const tripPresenter = new TripPresenter({
   filtersContainer: filterContainerElement,
   filtersModel: filtersModel,
   pointsContainer: pointsContainerElement,
+  infoContainer: newPointButtonContainerElement,
   pointsModel,
   onNewPointFormDestroy: handleNewPointFormClose,
 });
