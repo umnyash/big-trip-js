@@ -1,8 +1,10 @@
 import TripInfoView from '../view/trip-info-view.js';
 import SortingView from '../view/sorting-view.js';
 import PointsListView from '../view/points-list-view.js';
+import LoadingView from '../view/loading-view.js';
 import NoPointsView from '../view/no-points-view.js';
 import { remove, render, RenderPosition } from '../framework/render.js';
+import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
 import PointPresenter from './point-presenter.js';
 import NewPointPresenter from './new-point-presenter.js';
 import FiltersPresenter from './filters-presenter.js';
@@ -10,10 +12,16 @@ import { sortPointsByDateUp, sortPointsByPriceDown, sortPointsByDurationDown } f
 import { SortType, FilterType, UserAction, UpdateType } from '../const.js';
 import { filter } from '../utils/filters.js';
 
+const TimeLimit = {
+  LOWER_LIMIT: 350,
+  UPPER_LIMIT: 1000,
+};
+
 export default class TripPresenter {
   #pointsListComponent = new PointsListView();
   #sortingComponent = null;
   #infoComponent = null;
+  #loadingComponent = new LoadingView();
   #noPointsComponent = null;
   #filtersContainer = null;
   #filtersModel = null;
@@ -21,6 +29,11 @@ export default class TripPresenter {
   #infoContainer = null;
   #pointsModel = null;
   #newPointPresenter = null;
+  #isLoading = true;
+  #uiBlocker = new UiBlocker({
+    lowerLimit: TimeLimit.LOWER_LIMIT,
+    upperLimit: TimeLimit.UPPER_LIMIT,
+  });
 
   #pointPresenter = new Map();
   #currentSortType = SortType.DATA_UP;
@@ -88,18 +101,37 @@ export default class TripPresenter {
     this.#pointPresenter.forEach((presenter) => presenter.resetView());
   };
 
-  #handlePointViewAction = (actionType, updateType, update) => {
+  #handlePointViewAction = async (actionType, updateType, update) => {
+    this.#uiBlocker.block();
+
     switch (actionType) {
       case UserAction.ADD_POINT:
-        this.#pointsModel.addPoint(updateType, update);
+        this.#newPointPresenter.setSaving();
+        try {
+          await this.#pointsModel.addPoint(updateType, update);
+        } catch (err) {
+          this.#newPointPresenter.setAborting();
+        }
         break;
       case UserAction.DELETE_POINT:
-        this.#pointsModel.deletePoint(updateType, update);
+        this.#pointPresenter.get(update.id).setDeleting();
+        try {
+          await this.#pointsModel.deletePoint(updateType, update);
+        } catch (err) {
+          this.#pointPresenter.get(update.id).setAborting();
+        }
         break;
       case UserAction.UPDATE_POINT:
-        this.#pointsModel.updatePoint(updateType, update);
+        this.#pointPresenter.get(update.id).setSaving();
+        try {
+          await this.#pointsModel.updatePoint(updateType, update);
+        } catch (err) {
+          this.#pointPresenter.get(update.id).setAborting();
+        }
         break;
     }
+
+    this.#uiBlocker.unblock();
   };
 
   #handleModelEvent = (updateType, data) => {
@@ -113,6 +145,11 @@ export default class TripPresenter {
         break;
       case UpdateType.MAJOR:
         this.#clearTrip({ resetSortType: true });
+        this.#renderTrip();
+        break;
+      case UpdateType.INIT:
+        this.#isLoading = false;
+        remove(this.#loadingComponent);
         this.#renderTrip();
         break;
     }
@@ -161,6 +198,10 @@ export default class TripPresenter {
     this.#renderPoints();
   }
 
+  #renderLoading() {
+    render(this.#loadingComponent, this.#pointsContainer);
+  }
+
   #renderNoPoints() {
     this.#noPointsComponent = new NoPointsView({
       currentFilterType: this.#currentFilterType,
@@ -195,6 +236,7 @@ export default class TripPresenter {
     this.#clearPoints();
 
     remove(this.#sortingComponent);
+    remove(this.#loadingComponent);
     remove(this.#infoComponent);
 
     if (this.#noPointsComponent) {
@@ -207,6 +249,11 @@ export default class TripPresenter {
   }
 
   #renderTrip() {
+    if (this.#isLoading) {
+      this.#renderLoading();
+      return;
+    }
+
     if (this.points.length) {
       this.#renderInfo();
       this.#renderSorting();

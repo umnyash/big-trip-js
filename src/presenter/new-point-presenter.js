@@ -52,13 +52,32 @@ export default class NewPointPresenter {
     document.removeEventListener('keydown', this.#handleEscapeKeydown);
   }
 
+  setSaving() {
+    this.#pointFormComponent.updateElement({
+      isDisabled: true,
+      isSaving: true,
+    });
+  }
+
+  setAborting() {
+    const resetFormState = () => {
+      this.#pointFormComponent.updateElement({
+        isDisabled: false,
+        isSaving: false,
+        isDeleting: false,
+      });
+    };
+
+    this.#pointFormComponent.shake(resetFormState);
+  }
+
   #handleFormSubmit = (point) => {
     this.#handleDataChange(
       UserAction.ADD_POINT,
       UpdateType.MINOR,
-      {id: crypto.randomUUID(), ...point},
+      point,
     );
-    this.destroy();
+    // this.destroy();
   };
 
   #handleFormReset = () => {

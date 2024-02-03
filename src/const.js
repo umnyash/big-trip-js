@@ -6,6 +6,8 @@ export const MINUTES_IN_DAY = 1440;
 
 export const DATE_COMPARISON_PRECISION_UNIT = 'm';
 
+export const POINT_MIN_BASE_PRICE = 1;
+
 export const POINTS_TYPES = [
   'taxi',
   'bus',
@@ -56,4 +58,5 @@ export const UpdateType = {
   PATCH: 'PATCH',
   MINOR: 'MINOR',
   MAJOR: 'MAJOR',
+  INIT: 'INIT',
 };

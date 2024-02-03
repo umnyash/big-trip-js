@@ -76,8 +76,8 @@ export function isFuturePoint(point) {
   return dayjs(point.dateFrom).isAfter(dayjs(), DATE_COMPARISON_PRECISION_UNIT);
 }
 
-export function getDateNow() {
-  return dayjs().toDate();
+export function getMinDateTo(dateFrom) {
+  return dayjs(dateFrom).add(1, 'minute').toDate();
 }
 
 export function getDestinationName(destinations, id) {

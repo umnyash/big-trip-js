@@ -1,5 +1,5 @@
-import { POINTS_TYPES } from '../const.js';
-import { convertFirstCharacterToUpperCase, getDateNow } from '../utils/point.js';
+import { POINTS_TYPES, POINT_MIN_BASE_PRICE } from '../const.js';
+import { convertFirstCharacterToUpperCase, getMinDateTo } from '../utils/point.js';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
@@ -7,11 +7,12 @@ import he from 'he';
 
 const BLANK_POINT = {
   basePrice: '',
-  dateFrom: getDateNow(),
-  dateTo: getDateNow(),
+  dateFrom: new Date(),
+  dateTo: getMinDateTo(new Date()),
   type: 'taxi',
   offers: [],
   destination: null,
+  isFavorite: false,
 };
 
 function createTypeListTemplate(types, selectedType) {
@@ -29,7 +30,7 @@ function createTypeListTemplate(types, selectedType) {
   `);
 }
 
-function createOffersTemplate(type, offers, selectedOffersIds) {
+function createOffersTemplate(type, offers, selectedOffersIds, isDisabled) {
   const offersByCurrentType = offers.find((offersByType) => offersByType.type === type).offers;
 
   if (!offersByCurrentType.length) {
@@ -49,6 +50,7 @@ function createOffersTemplate(type, offers, selectedOffersIds) {
               name="event-offer-${title}"
               data-id=${id}
               ${selectedOffersIds[id] ? 'checked' : ''}
+              ${isDisabled ? 'disabled' : ''}
             >
             <label class="event__offer-label" for="event-offer-${title}-1">
               <span class="event__offer-title">Add ${title}</span>
@@ -112,17 +114,23 @@ function createPointDetailsTemplate(offersTemplate, destinationTemplate) {
   );
 }
 
-function createPointButtonsTemplate(isNewPoint) {
+function createPointButtonsTemplate(isNewPoint, isDisabled, isSaving, isDeleting) {
   if (isNewPoint) {
     return(`
-      <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
-      <button class="event__reset-btn" type="reset">Cancel</button>
+      <button class="event__save-btn  btn  btn--blue" type="submit" ${isDisabled ? 'disabled' : ''}>
+        ${isSaving ? 'Saving...' : 'Save'}
+      </button>
+      <button class="event__reset-btn" type="reset" ${isDisabled ? 'disabled' : ''}>Cancel</button>
     `);
   } else {
     return(`
-      <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
-      <button class="event__reset-btn" type="button">Delete</button>
-      <button class="event__rollup-btn" type="reset">
+      <button class="event__save-btn  btn  btn--blue" type="submit" ${isDisabled ? 'disabled' : ''}>
+        ${isSaving ? 'Saving...' : 'Save'}
+      </button>
+      <button class="event__reset-btn" type="button" ${isDisabled ? 'disabled' : ''}>
+        ${isDeleting ? 'Deleting...' : 'Delete'}
+      </button>
+      <button class="event__rollup-btn" type="reset" ${isDisabled ? 'disabled' : ''}>
         <span class="visually-hidden">Open event</span>
       </button>
     `);
@@ -135,15 +143,18 @@ function createPointFormTemplate(data, isNew, offers, destinations) {
     type,
     offers: offersIds,
     destination: destinationId,
+    isDisabled,
+    isSaving,
+    isDeleting,
   } = data;
 
   const typeListTemplate = createTypeListTemplate(POINTS_TYPES, type);
-  const offersTemplate = createOffersTemplate(type, offers, offersIds);
+  const offersTemplate = createOffersTemplate(type, offers, offersIds, isDisabled);
   const destinationValuesList = createDestinationsValuesList(destinations);
   const destinationName = (destinationId === null) ? '' : getDestination(destinationId, destinations).name;
   const destinationTemplate = (destinationId === null) ? '' : createDestinationTemplate(destinationId, destinations);
   const pointDetailsTemplate = createPointDetailsTemplate(offersTemplate, destinationTemplate);
-  const pointButtonsTemplate = createPointButtonsTemplate(isNew);
+  const pointButtonsTemplate = createPointButtonsTemplate(isNew, isDisabled, isSaving, isDeleting);
 
   return (`
     <li class="trip-events__item">
@@ -154,7 +165,7 @@ function createPointFormTemplate(data, isNew, offers, destinations) {
               <span class="visually-hidden">Choose event type</span>
               <img class="event__type-icon" width="17" height="17" src="img/icons/${type}.png" alt="Event type icon">
             </label>
-            <input class="event__type-toggle  visually-hidden" id="event-type-toggle-1" type="checkbox">
+            <input class="event__type-toggle  visually-hidden" id="event-type-toggle-1" type="checkbox" ${isDisabled ? 'disabled' : ''}>
             ${typeListTemplate}
           </div>
 
@@ -162,16 +173,25 @@ function createPointFormTemplate(data, isNew, offers, destinations) {
             <label class="event__label  event__type-output" for="event-destination-1">
               ${convertFirstCharacterToUpperCase(type)}
             </label>
-            <input class="event__input  event__input--destination" id="event-destination-1" type="text" required name="event-destination" value="${he.encode(destinationName)}" list="destination-list-1">
+            <input
+              class="event__input  event__input--destination"
+              id="event-destination-1"
+              type="text"
+              required
+              name="event-destination"
+              value="${he.encode(destinationName)}"
+              list="destination-list-1"
+              ${isDisabled ? 'disabled' : ''}
+            >
             ${destinationValuesList}
           </div>
 
           <div class="event__field-group  event__field-group--time">
             <label class="visually-hidden" for="event-start-time-1">From</label>
-            <input class="event__input  event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="19/03/19 00:00">
+            <input class="event__input  event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="19/03/19 00:00" ${isDisabled ? 'disabled' : ''}>
             &mdash;
             <label class="visually-hidden" for="event-end-time-1">To</label>
-            <input class="event__input  event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="19/03/19 00:00">
+            <input class="event__input  event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="19/03/19 00:00" ${isDisabled ? 'disabled' : ''}>
           </div>
 
           <div class="event__field-group  event__field-group--price">
@@ -179,7 +199,7 @@ function createPointFormTemplate(data, isNew, offers, destinations) {
               <span class="visually-hidden">Price</span>
               &euro;
             </label>
-            <input class="event__input  event__input--price" id="event-price-1" type="number" min="0" name="event-price" required value=${basePrice}>
+            <input class="event__input  event__input--price" id="event-price-1" type="number" min="${POINT_MIN_BASE_PRICE}" name="event-price" required value="${basePrice}" ${isDisabled ? 'disabled' : ''}>
           </div>
           ${pointButtonsTemplate}
         </header>
@@ -308,7 +328,15 @@ export default class PointFormView extends AbstractStatefulView {
       dateFrom: userDate,
     });
 
-    this.#datepickerTo.set('minDate', this._state.dateFrom);
+    if (this._state.dateTo <= this._state.dateFrom) {
+      this._setState({
+        dateTo: getMinDateTo(this._state.dateFrom),
+      });
+
+      this.#datepickerTo.setDate(getMinDateTo(this._state.dateFrom));
+    }
+
+    this.#datepickerTo.set('minDate', getMinDateTo(this._state.dateFrom));
   };
 
   #dateToChangeHadler = ([userDate]) => {
@@ -339,7 +367,7 @@ export default class PointFormView extends AbstractStatefulView {
         minuteIncrement: 1,
         defaultDate: this._state.dateTo,
         onChange: this.#dateToChangeHadler,
-        minDate: this._state.dateFrom,
+        minDate: getMinDateTo(this._state.dateFrom),
       }
     );
   }
@@ -354,6 +382,9 @@ export default class PointFormView extends AbstractStatefulView {
     return {
       ...point,
       offers: offersList,
+      isDisabled: false,
+      isSaving: false,
+      isDeleting: false,
     };
   }
 
@@ -362,13 +393,19 @@ export default class PointFormView extends AbstractStatefulView {
 
     for (const id in state.offers) {
       if (state.offers[id]) {
-        offersIds.push(+id);
+        offersIds.push(id);
       }
     }
 
-    return {
+    const point = {
       ...state,
       offers: offersIds,
     };
+
+    delete point.isDisabled;
+    delete point.isSaving;
+    delete point.isDeleting;
+
+    return point;
   }
 }
